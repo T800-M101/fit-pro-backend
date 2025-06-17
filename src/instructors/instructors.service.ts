@@ -10,15 +10,14 @@ export class InstructorsService {
 
   constructor(@InjectRepository(Instructor) private instructorsRepository: Repository<Instructor>){}
   
-  
+  async findAll(): Promise<Instructor[]> {
+    return this.instructorsRepository.find();
+  }
+
   create(createInstructorDto: CreateInstructorDto) {
     return 'This action adds a new instructor';
   }
 
-  async findAll(): Promise<Instructor[]> {
-    console.log(this.instructorsRepository.find())
-    return this.instructorsRepository.find();
-  }
 
   findOne(id: number) {
     return `This action returns a #${id} instructor`;

@@ -9,8 +9,7 @@ import { Repository } from 'typeorm';
 export class UsersService {
 
 
-constructor(
-  @InjectRepository(User) private usersRepository: Repository<User>){}
+constructor(@InjectRepository(User) private usersRepository: Repository<User>){}
 
 
   async findAll(): Promise<User[]>  {
