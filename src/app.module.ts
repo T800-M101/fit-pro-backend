@@ -9,6 +9,7 @@ import { BookingsModule } from './bookings/bookings.module';
 import { NoShowsModule } from './no-shows/no-shows.module';
 import { PaymentsModule } from './payments/payments.module';
 import { MembershipPlansModule } from './membership-plans/membership-plans.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { MembershipPlansModule } from './membership-plans/membership-plans.modul
     NoShowsModule,
     PaymentsModule,
     MembershipPlansModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

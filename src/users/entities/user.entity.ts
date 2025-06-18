@@ -1,3 +1,4 @@
+import { Role } from 'src/common/role.enum';
 import { Booking } from '../../bookings/entities/booking.entity';
 import { NoShow } from '../../no-shows/entities/no-show.entity';
 import { Payment } from '../../payments/entities/payment.entity';
@@ -28,9 +29,9 @@ export class User {
   phone?: string;
 
   @Column({ name: 'password_hash', type: 'text' })
-  passwordHash: string;
+  password: string;
 
-  @Column({ length: 10, nullable: true })
+  @Column({ length: 30, nullable: true })
   gender?: string;
 
   @Column({ name: 'membership_type', length: 50, nullable: true })
@@ -44,6 +45,9 @@ export class User {
 
   @Column({ name: 'qr_code', type: 'text', nullable: true })
   qrCode?: string;
+
+  @Column({ type: 'enum', enum: Role, default: Role.User })
+  role: Role;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
