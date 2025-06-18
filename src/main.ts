@@ -5,9 +5,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
-    origin: 'http://localhost:4200', // your Angular app origin
+    origin: process.env.FRONTEND_URL
   });
   
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT;
+  await app.listen(port || 4000);
 }
 bootstrap();

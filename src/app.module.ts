@@ -10,10 +10,12 @@ import { NoShowsModule } from './no-shows/no-shows.module';
 import { PaymentsModule } from './payments/payments.module';
 import { MembershipPlansModule } from './membership-plans/membership-plans.module';
 import { AuthModule } from './auth/auth.module';
+import { PasswordResetTokenModule } from './password-reset-token/password-reset-token.module';
+import { EmailService } from './email/email.service';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],  // <-- here use ConfigModule, NOT ConfigService
       inject: [ConfigService],
@@ -37,6 +39,8 @@ import { AuthModule } from './auth/auth.module';
     PaymentsModule,
     MembershipPlansModule,
     AuthModule,
+    PasswordResetTokenModule,
   ],
+  providers: [EmailService],
 })
 export class AppModule {}

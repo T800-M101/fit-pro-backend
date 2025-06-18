@@ -6,10 +6,22 @@ import {
   Patch,
   Param,
   Delete,
+  Put,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { RegisterAuthDto } from './dto/register-auth.dto';
+import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
+import { ChangePasswordDTO } from './dto/change-password.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { Request } from 'express';
+import { JwtAuthGuard } from './jwt-auth-guard';
+import { ResetPasswordDTO } from './dto/reset-password.dto';
+interface AuthenticatedRequest extends Request {
+  user: { id: number }; // Add more fields if needed
+}
 
 @Controller('auth')
 export class AuthController {
@@ -25,23 +37,25 @@ export class AuthController {
     return this.authService.login(userLogin);
   }
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
-  }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
-  }
+  @Post('request-password-reset') 
+  async requestPasswordReset(@Body() dto: RequestPasswordResetDto) {
+  return this.authService.sendPasswordResetLink(dto.email);
+}
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: RegisterAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
-  }
+@Put('reset-password')
+async resetPassword(@Body() dto: ResetPasswordDTO) {
+  return this.authService.resetPassword(dto);
+}
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
-  }
+
+// @UseGuards(JwtAuthGuard)
+// @Put('change-password') 
+// async changePassword(
+//   @Req() req: AuthenticatedRequest,
+//   @Body() changePasswordDto: ChangePasswordDTO
+// ) {
+//   const userId = req.user.id; 
+//   return this.authService.changePassword(userId, changePasswordDto);
+// }
 }

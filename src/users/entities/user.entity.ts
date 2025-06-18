@@ -9,6 +9,7 @@ import {
   CreateDateColumn,
   OneToMany,
 } from 'typeorm';
+import { PasswordResetToken } from 'src/password-reset-token/entities/password-reset-token.entity';
 
 // ----------------- User Entity -----------------
 @Entity('users')
@@ -61,5 +62,7 @@ export class User {
 
   @OneToMany(() => Payment, (payment) => payment.user)
   payments: Payment[];
+  @OneToMany(() => PasswordResetToken, token => token.user)
+  passwordResetTokens: PasswordResetToken[];
 }
 
