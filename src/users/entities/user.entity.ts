@@ -17,8 +17,8 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'full_name', length: 100 })
-  fullName: string;
+  @Column({ name: 'name', length: 100 })
+  name: string;
 
   @Column({ length: 50, unique: true })
   username: string;
@@ -35,8 +35,8 @@ export class User {
   @Column({ length: 30, nullable: true })
   gender?: string;
 
-  @Column({ name: 'membership_type', length: 50, nullable: true })
-  membershipType?: string;
+  @Column({ name: 'membership', length: 50, nullable: true })
+  membership?: string;
 
   @Column({ name: 'allow_email', default: false })
   allowEmail: boolean;

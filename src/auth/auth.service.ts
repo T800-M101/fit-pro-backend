@@ -1,4 +1,11 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { RegisterAuthDto } from './dto/register-auth.dto';
 import { hash, compare } from 'bcrypt';
@@ -11,73 +18,106 @@ import { UserResponseDto } from './dto/user-response.dto';
 import { randomUUID } from 'crypto';
 import { PasswordResetToken } from 'src/password-reset-token/entities/password-reset-token.entity';
 import { EmailService } from 'src/email/email.service';
-import { ChangePasswordDTO } from './dto/change-password.dto';
 import { ResetPasswordDTO } from './dto/reset-password.dto';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User) private usersRepository: Repository<User>,
     private jwtService: JwtService,
-   @InjectRepository(PasswordResetToken) // ✅ ADD THIS
-  private passwordResetRepository: Repository<PasswordResetToken>,
+    @InjectRepository(PasswordResetToken)
+    private passwordResetRepository: Repository<PasswordResetToken>,
     private readonly emailService: EmailService,
   ) {}
 
-async register(userAuthDto: RegisterAuthDto) {
-  const { password, ...userData } = userAuthDto;
+  async register(createUserDto: CreateUserDto) {
+    try {
+      const { password, ...userData } = createUserDto;
 
-  // Check if email already exists
-  const existingUser = await this.usersRepository.findOne({
-    where: { email: userData.email },
-  });
+      // Check if email already exists
+      const existingUser = await this.usersRepository.findOne({
+        where: { email: userData.email.toLowerCase() },
+      });
 
-  if (existingUser) {
-    throw new HttpException('Email already in use', HttpStatus.CONFLICT);
+      if (existingUser) {
+        throw new HttpException('Email already in use', HttpStatus.CONFLICT);
+      }
+
+      // Hash password
+      const hashedPassword = await hash(password, 10);
+
+      // Create new user
+      const newUser = this.usersRepository.create({
+        ...userData,
+        name: userData.name.toLowerCase(),
+        username: userData.username.toLowerCase(),
+        email: userData.email.toLowerCase(),
+        gender: userData.gender.toLowerCase(),
+        membership: userData.membership.toLowerCase(),
+        password: hashedPassword,
+      });
+
+      const savedUser = await this.usersRepository.save(newUser);
+
+      const payload = {
+        sub: savedUser.id,
+        name: savedUser.name,
+        role: savedUser.role,
+      };
+
+      const token = await this.jwtService.signAsync(payload);
+
+      return { token };
+    } catch (error) {
+      console.error('Registration error:', error);
+
+      if (error instanceof HttpException) {
+        // Forward known HttpExceptions (like email conflict)
+        throw error;
+      }
+
+      // Fallback for unexpected errors
+      throw new HttpException(
+        'Registration failed. Please try again later.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
-  // Hash password
-  const hashedPassword = await hash(password, 10);
+  async login(userLogin: LoginAuthDto) {
+  const { email, password } = userLogin;
+  const userFound = await this.usersRepository.findOne({ where: { email } });
 
-  const newUser = this.usersRepository.create({
-    ...userData,
-    password: hashedPassword,
-  });
+  if (!userFound) {
+    throw new NotFoundException('User not found');
+  }
 
-  const savedUser = await this.usersRepository.save(newUser);
+  const isPasswordValid = await compare(password, userFound.password);
 
- 
-  const payload = { sub: savedUser.id, name: savedUser.fullName, role: savedUser.role };
+  if (!isPasswordValid) {
+    throw new UnauthorizedException('Wrong credentials');
+  }
+
+  const payload = {
+    id: userFound.id,
+    email: userFound.email,
+    name: userFound.name,
+    role: userFound.role,
+  };
+
   const token = await this.jwtService.signAsync(payload);
 
-  return { token }; 
+  return {
+    user: plainToInstance(UserResponseDto, userFound, {
+      excludeExtraneousValues: true,
+    }),
+    token,
+  };
 }
 
 
-  async login(userLogin: LoginAuthDto) {
-    const { email, password } = userLogin;
-    const userFound = await this.usersRepository.findOne({ where: { email } });
-
-    if (!userFound) {
-      throw new HttpException('User not found', 404);
-    }
-
-    const checkPassword = await compare(password, userFound.password);
-
-    if (!checkPassword) {
-      return new HttpException('wrong credentials', 403);
-    }
-
-    const payload = { id: userFound.id, email: userFound.email, name: userFound.fullName, role: userFound.role };
-    const token = this.jwtService.sign(payload);
-
-    return {
-      user: plainToInstance(UserResponseDto, userFound,  {excludeExtraneousValues: true}),
-      token
-    };
-  }
-
-async sendPasswordResetLink(email: string): Promise<{ message: string }> {
+  async sendPasswordResetLink(email: string): Promise<{ message: string }> {
     const user = await this.usersRepository.findOne({ where: { email } });
     if (!user) {
       throw new NotFoundException('User not found');
@@ -102,32 +142,29 @@ async sendPasswordResetLink(email: string): Promise<{ message: string }> {
     return { message: 'Reset link sent' };
   }
 
+ async resetPassword(dto: ResetPasswordDTO): Promise<{ message: string }> {
+  const record = await this.passwordResetRepository.findOne({
+    where: { token: dto.token },
+  });
 
-  async resetPassword(dto: ResetPasswordDTO): Promise<{ message: string }> {
-   
-    const record = await this.passwordResetRepository.findOne({ where: { token: dto.token } });
+  if (!record) throw new BadRequestException('Invalid or expired token');
+  if (record.expiresAt < new Date())
+    throw new BadRequestException('Token expired');
+  if (record.used)
+    throw new BadRequestException('Token has already been used');
 
-    if (!record) throw new BadRequestException('Invalid or expired token');
-    if (record.expiresAt < new Date()) throw new BadRequestException('Token expired');
+  const user = await this.usersRepository.findOne({
+    where: { id: record.userId },
+  });
+  if (!user) throw new NotFoundException('User not found');
 
-    const user = await this.usersRepository.findOne({ where: { id: record.userId } });
-    if (!user) throw new NotFoundException('User not found');
+  user.password = await hash(dto.newPassword, 10);
+  await this.usersRepository.save(user);
 
-    user.password = await hash(dto.newPassword, 10);
-    await this.usersRepository.save(user);
+  record.used = true;
+  await this.passwordResetRepository.save(record);
 
-    // Opcional: borrar token para no poder reutilizarlo
-    await this.passwordResetRepository.delete({ token: dto.token });
-
-    return { message: 'Password reset successfully' };
-  }
+  return { message: 'Password reset successfully' };
 }
 
-
-
-
-
-
-
- 
-
+}

@@ -12,13 +12,10 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginAuthDto } from './dto/login-auth.dto';
-import { RegisterAuthDto } from './dto/register-auth.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
-import { ChangePasswordDTO } from './dto/change-password.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
-import { JwtAuthGuard } from './jwt-auth-guard';
 import { ResetPasswordDTO } from './dto/reset-password.dto';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
 interface AuthenticatedRequest extends Request {
   user: { id: number }; // Add more fields if needed
 }
@@ -28,8 +25,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  registerUser(@Body() userAuthDto: RegisterAuthDto) {
-    return this.authService.register(userAuthDto);
+  registerUser(@Body() createUserDto: CreateUserDto) {
+    return this.authService.register(createUserDto);
   }
 
   @Post('login')

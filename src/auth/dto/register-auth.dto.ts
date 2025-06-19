@@ -1,11 +1,11 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { LoginAuthDto } from './login-auth.dto';
-import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class RegisterAuthDto extends PartialType(LoginAuthDto) {
 
       @IsString()
-      fullName:string;
+      name:string;
      
       @IsString()
       username:string;
@@ -24,5 +24,17 @@ export class RegisterAuthDto extends PartialType(LoginAuthDto) {
       gender: string;
       
       @IsString()
-      membershipType: string;
+      membership: string;
+      
+      @IsOptional()
+      @IsString()
+      role: string = 'user';
+      
+      @IsOptional()
+      @IsBoolean()
+      wantsEmail?: boolean;
+
+      @IsOptional()
+      @IsBoolean()
+      wantsWhatsApp?: boolean;
 }

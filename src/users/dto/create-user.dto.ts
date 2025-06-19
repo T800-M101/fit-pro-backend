@@ -6,9 +6,14 @@ export class CreateUserDto {
     
   @IsString()
   @IsNotEmpty()
-  fullName: string;
+  name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  username: string;
 
   @IsEmail()
+  @IsNotEmpty()
   email: string;
 
   @IsString()
@@ -27,7 +32,10 @@ export class CreateUserDto {
   @IsNotEmpty()
   membership: string;
 
+  @IsString()
+  @IsOptional()
+  qrCode?: string;
+
   @IsEnum(Role)
-  @IsOptional() // Optional: defaults to 'user' if not provided
-  role?: Role;
+  role?: Role = Role.User;
 }
