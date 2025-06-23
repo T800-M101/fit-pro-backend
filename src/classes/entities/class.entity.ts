@@ -1,5 +1,4 @@
 import { Instructor } from "../../instructors/entities/instructor.entity";
-import { ClassSession } from "../../classes/entities/class-session.entity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('classes')
@@ -22,13 +21,9 @@ export class Class {
   @Column({ length: 20, nullable: true })
   intensity?: string;
 
-  @ManyToOne(() => Instructor, (instructor) => instructor.classes, { nullable: true })
-  @JoinColumn({ name: 'instructor_id' })
-  instructor?: Instructor;
 
   @Column({ name: 'max_students', type: 'int' })
   maxStudents: number;
 
-  @OneToMany(() => ClassSession, (session) => session.class)
-  sessions: ClassSession[];
+
 }

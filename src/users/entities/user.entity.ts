@@ -1,6 +1,5 @@
 import { Role } from 'src/common/role.enum';
 import { Booking } from '../../bookings/entities/booking.entity';
-import { NoShow } from '../../no-shows/entities/no-show.entity';
 import { Payment } from '../../payments/entities/payment.entity';
 import {
   Entity,
@@ -53,16 +52,6 @@ export class User {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  // Relations
-  @OneToMany(() => Booking, (booking) => booking.user)
-  bookings: Booking[];
-
-  @OneToMany(() => NoShow, (noShow) => noShow.user)
-  noShows: NoShow[];
-
-  @OneToMany(() => Payment, (payment) => payment.user)
-  payments: Payment[];
-  @OneToMany(() => PasswordResetToken, token => token.user)
-  passwordResetTokens: PasswordResetToken[];
+  
 }
 

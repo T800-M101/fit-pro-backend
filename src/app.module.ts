@@ -6,12 +6,12 @@ import { InstructorsModule } from './instructors/instructors.module';
 import { UsersModule } from './users/users.module';
 import { ClassesModule } from './classes/classes.module';
 import { BookingsModule } from './bookings/bookings.module';
-import { NoShowsModule } from './no-shows/no-shows.module';
 import { PaymentsModule } from './payments/payments.module';
 import { MembershipPlansModule } from './membership-plans/membership-plans.module';
 import { AuthModule } from './auth/auth.module';
 import { PasswordResetTokenModule } from './password-reset-token/password-reset-token.module';
 import { EmailService } from './email/email.service';
+import { NoShowUpModule } from './no-show-up/no-show-up.module';
 
 @Module({
   imports: [
@@ -35,7 +35,7 @@ import { EmailService } from './email/email.service';
     UsersModule,
     ClassesModule,
     BookingsModule,
-    NoShowsModule,
+    NoShowUpModule,
     PaymentsModule,
     MembershipPlansModule,
     AuthModule,

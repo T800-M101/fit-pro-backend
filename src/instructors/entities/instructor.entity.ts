@@ -21,9 +21,6 @@ export class Instructor {
     @Column({ nullable: true })
     twitter?: string;
 
-    // Relations
-    @OneToMany(() => Class, (cls) => cls.instructor)
-    classes: Class[];
 }
 
 

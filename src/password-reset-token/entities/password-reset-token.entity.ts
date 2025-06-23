@@ -21,7 +21,5 @@ export class PasswordResetToken {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => User, user => user.passwordResetTokens)
-  user: User;
 }
 

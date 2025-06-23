@@ -2,20 +2,23 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
+import { Class } from './entities/class.entity';
 
 @Controller('classes')
 export class ClassesController {
   constructor(private readonly classesService: ClassesService) {}
+
+  @Get('get')
+  getClassesInfo(): Promise<Class[]> {
+    return this.classesService.getClassesInfo();
+  }
+
 
   @Post()
   create(@Body() createClassDto: CreateClassDto) {
     return this.classesService.create(createClassDto);
   }
 
-  @Get()
-  findAll() {
-    return this.classesService.findAll();
-  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {

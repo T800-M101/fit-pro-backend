@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { CreateNoShowDto } from './dto/create-no-show.dto';
-import { UpdateNoShowDto } from './dto/update-no-show.dto';
+import { CreateNoShowUpDto } from './dto/create-no-show-up.dto';
 
 @Injectable()
-export class NoShowsService {
-  create(createNoShowDto: CreateNoShowDto) {
+export class NoShowUpService {
+  create(createNoShowUpDto: CreateNoShowUpDto) {
     return 'This action adds a new noShow';
   }
 
@@ -16,7 +15,7 @@ export class NoShowsService {
     return `This action returns a #${id} noShow`;
   }
 
-  update(id: number, updateNoShowDto: UpdateNoShowDto) {
+  update(id: number, updateNoShowUpDto: CreateNoShowUpDto) {
     return `This action updates a #${id} noShow`;
   }
 

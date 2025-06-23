@@ -6,10 +6,6 @@ export class Payment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.payments)
-  @JoinColumn({ name: 'user_id' })
-  user: User;
-
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
