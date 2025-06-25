@@ -6,9 +6,6 @@ export class RegisterAuthDto extends PartialType(LoginAuthDto) {
 
       @IsString()
       name:string;
-     
-      @IsString()
-      username:string;
     
       @IsEmail()
       email: string;
@@ -25,6 +22,9 @@ export class RegisterAuthDto extends PartialType(LoginAuthDto) {
       
       @IsString()
       membership: string;
+      
+      @IsBoolean()
+      membershipStatus: boolean;
       
       @IsOptional()
       @IsString()

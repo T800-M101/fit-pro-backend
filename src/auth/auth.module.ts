@@ -9,10 +9,11 @@ import { EmailModule } from 'src/email/email.module';
 import { PasswordResetToken } from 'src/password-reset-token/entities/password-reset-token.entity';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwtStrategy';
+import { Role } from 'src/roles/entities/role.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, PasswordResetToken]),
+    TypeOrmModule.forFeature([User, PasswordResetToken, Role]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: jwtConstants.secret,

@@ -9,15 +9,16 @@ import { Repository } from 'typeorm';
 export class MembershipPlansService {
 
 
-  constructor(@InjectRepository(MembershipPlan) private membershipPlanRepository: Repository<MembershipPlan>){}
+  constructor(@InjectRepository(MembershipPlan) private membershipPlanRepo: Repository<MembershipPlan>){}
     
   async findAll(): Promise<MembershipPlan[]> {
-      return this.membershipPlanRepository.find();
+      return this.membershipPlanRepo.find();
   }
 
 
-  create(createMembershipPlanDto: CreateMembershipPlanDto) {
-    return 'This action adds a new membershipPlan';
+ async create(createMembershipPlanDto: CreateMembershipPlanDto): Promise<MembershipPlan> {
+    const newPlan = this.membershipPlanRepo.create(createMembershipPlanDto);
+    return await this.membershipPlanRepo.save(newPlan);
   }
   
   findOne(id: number) {

@@ -7,7 +7,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { LoginAuthDto } from './dto/login-auth.dto';
-import { RegisterAuthDto } from './dto/register-auth.dto';
 import { hash, compare } from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
@@ -16,19 +15,20 @@ import { JwtService } from '@nestjs/jwt';
 import { plainToInstance } from 'class-transformer';
 import { UserResponseDto } from './dto/user-response.dto';
 import { randomUUID } from 'crypto';
-import { PasswordResetToken } from 'src/password-reset-token/entities/password-reset-token.entity';
+import { PasswordResetToken } from '../password-reset-token/entities/password-reset-token.entity';
 import { EmailService } from 'src/email/email.service';
 import { ResetPasswordDTO } from './dto/reset-password.dto';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { Role } from '../roles/entities/role.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User) private usersRepository: Repository<User>,
-    private jwtService: JwtService,
-    @InjectRepository(PasswordResetToken)
-    private passwordResetRepository: Repository<PasswordResetToken>,
+    @InjectRepository(User) private usersRepository: Repository<User>, 
+    @InjectRepository(PasswordResetToken) private passwordResetRepository: Repository<PasswordResetToken>,
+    @InjectRepository(Role) private rolRepository: Repository<Role>,
     private readonly emailService: EmailService,
+    private jwtService: JwtService
   ) {}
 
   async register(createUserDto: CreateUserDto) {
@@ -47,23 +47,29 @@ export class AuthService {
       // Hash password
       const hashedPassword = await hash(password, 10);
 
+      const defaultRole = await this.rolRepository.findOneBy({ name: 'user' });
+      if (!defaultRole) {
+        throw new HttpException('Default role not found', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
       // Create new user
       const newUser = this.usersRepository.create({
         ...userData,
         name: userData.name.toLowerCase(),
-        username: userData.username.toLowerCase(),
         email: userData.email.toLowerCase(),
         gender: userData.gender.toLowerCase(),
         membership: userData.membership.toLowerCase(),
         password: hashedPassword,
+        role: defaultRole as Role,
       });
 
+
+  
       const savedUser = await this.usersRepository.save(newUser);
 
       const payload = {
         sub: savedUser.id,
         name: savedUser.name,
-        role: savedUser.role,
       };
 
       const token = await this.jwtService.signAsync(payload);
@@ -103,7 +109,6 @@ export class AuthService {
     id: userFound.id,
     email: userFound.email,
     name: userFound.name,
-    role: userFound.role,
   };
 
   const token = await this.jwtService.signAsync(payload);
@@ -142,9 +147,9 @@ export class AuthService {
     return { message: 'Reset link sent' };
   }
 
- async resetPassword(dto: ResetPasswordDTO): Promise<{ message: string }> {
+ async resetPassword(resetPasswordDto: ResetPasswordDTO): Promise<{ message: string }> {
   const record = await this.passwordResetRepository.findOne({
-    where: { token: dto.token },
+    where: { token: resetPasswordDto.token },
   });
 
   if (!record) throw new BadRequestException('Invalid or expired token');
@@ -158,7 +163,7 @@ export class AuthService {
   });
   if (!user) throw new NotFoundException('User not found');
 
-  user.password = await hash(dto.newPassword, 10);
+  user.password = await hash(resetPasswordDto.newPassword, 10);
   await this.usersRepository.save(user);
 
   record.used = true;

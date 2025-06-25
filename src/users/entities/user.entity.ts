@@ -1,16 +1,23 @@
-import { Role } from 'src/common/role.enum';
+
 import { Booking } from '../../bookings/entities/booking.entity';
-import { Payment } from '../../payments/entities/payment.entity';
+import { PasswordResetToken } from '../../password-reset-token/entities/password-reset-token.entity';
+import { Comment } from '../../comments/entities/comment.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  UpdateDateColumn,
   OneToMany,
+  OneToOne,
+  ManyToOne,
+  JoinColumn
 } from 'typeorm';
-import { PasswordResetToken } from 'src/password-reset-token/entities/password-reset-token.entity';
+import { Payment } from 'src/payments/entities/payment.entity';
+import { MembershipPlan } from 'src/membership-plans/entities/membership-plan.entity';
+import { Role } from 'src/roles/entities/role.entity';
 
-// ----------------- User Entity -----------------
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -18,9 +25,6 @@ export class User {
 
   @Column({ name: 'name', length: 100 })
   name: string;
-
-  @Column({ length: 50, unique: true })
-  username: string;
 
   @Column({ length: 100, unique: true })
   email: string;
@@ -31,11 +35,14 @@ export class User {
   @Column({ name: 'password_hash', type: 'text' })
   password: string;
 
-  @Column({ length: 30, nullable: true })
+  @Column({ length: 30, nullable: false })
   gender?: string;
 
   @Column({ name: 'membership', length: 50, nullable: true })
   membership?: string;
+
+  @Column({name: 'membership_status', type: 'boolean', default: false})
+  membershipStatus
 
   @Column({ name: 'allow_email', default: false })
   allowEmail: boolean;
@@ -46,12 +53,31 @@ export class User {
   @Column({ name: 'qr_code', type: 'text', nullable: true })
   qrCode?: string;
 
-  @Column({ type: 'enum', enum: Role, default: Role.User })
-  role: Role;
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @OneToOne(() => PasswordResetToken)
+  passwordResetToken: PasswordResetToken;
+
+  @OneToMany(() => Booking, (booking) => booking.user)
+  bookings: Booking[];
+
+  @OneToMany(() => Comment, (comment) => comment.user )
+  comments: Comment[];
+
+  @OneToMany(() => Payment, (payment) => payment.user)
+  payments: Payment[];
+
+ @ManyToOne(() => MembershipPlan, { nullable: true })
+@JoinColumn({ name: 'membership_plan_id' }) 
+membershipPlan?: MembershipPlan;
+
+ @ManyToOne(() => Role, { nullable: true }) 
+@JoinColumn({ name: 'role_id' }) 
+role?: Role;
 }
+
 

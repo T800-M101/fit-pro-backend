@@ -1,26 +1,30 @@
-import { Injectable } from '@nestjs/common';
+import {  Injectable,  } from '@nestjs/common';
 import { CreateBookingDto } from './dto/create-booking.dto';
-import { UpdateBookingDto } from './dto/update-booking.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Booking } from './entities/booking.entity';
+import { ClassSession } from 'src/class_session/entities/class_session.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class BookingsService {
-  create(createBookingDto: CreateBookingDto) {
-    return 'This action adds a new booking';
-  }
 
-  findAll() {
-    return `This action returns all bookings`;
-  }
 
-  findOne(id: number) {
-    return `This action returns a #${id} booking`;
-  }
+  constructor(
+    @InjectRepository(Booking)
+    private readonly bookingRepository: Repository<Booking>,
+    @InjectRepository(ClassSession)
+    private readonly classSessionRepository: Repository<ClassSession>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
 
-  update(id: number, updateBookingDto: UpdateBookingDto) {
-    return `This action updates a #${id} booking`;
-  }
 
-  remove(id: number) {
-    return `This action removes a #${id} booking`;
-  }
+async bookClass(dto: CreateBookingDto): Promise<any> {
+  
 }
+}
+
+
+
+  

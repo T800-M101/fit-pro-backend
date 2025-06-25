@@ -1,4 +1,4 @@
-import { Class } from "../../classes/entities/class.entity";
+import { Class } from "src/classes/entities/class.entity";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({name: 'instructors'})
@@ -11,9 +11,12 @@ export class Instructor {
     
     @Column({ nullable: false })
     photo: string;
+
+    @Column({type: 'text', nullable: false, default: ''})
+    bio: string;
     
-    @Column({ nullable: false })
-    profession: string;
+    @Column({type: 'text', nullable: false, default:'' })
+    specialty: string;
     
     @Column({ nullable: true })
     facebook?: string;
@@ -21,7 +24,9 @@ export class Instructor {
     @Column({ nullable: true })
     twitter?: string;
 
-}
+   @OneToMany(() => Class, cls => cls.instructor)
+  classes: Class[];
 
+}
 
 

@@ -1,14 +1,44 @@
+import { ClassSession } from 'src/class_session/entities/class_session.entity';
+import { User } from 'src/users/entities/user.entity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn
+} from 'typeorm';
 
-import { Column, CreateDateColumn, Entity,  PrimaryGeneratedColumn, Unique } from "typeorm";
 
 @Entity('bookings')
 export class Booking {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ default: false })
+  @Column({ name: 'user_id', nullable: true })
+  userId?: number;
+  
+  @Column({ default: false, nullable: false})
   attended: boolean;
 
-  @CreateDateColumn({ name: 'booked_at' })
-  bookedAt: Date;
+  @Column({ default: false, nullable: false})
+  cancelled: boolean;
+
+  @Column({ name: 'cancellation_time', nullable: true, type: 'timestamp' })
+  cancellationTime: Date | null;  
+
+  @Column({name: 'booking_time'})
+  bookingTime: Date; 
+
+  @CreateDateColumn({ name: 'created_at' })
+    createdAt: Date;
+
+  @ManyToOne(() => User, user => user.bookings, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
+  @ManyToOne(() => ClassSession, classSession => classSession.bookings, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'class_session_id' })
+  classSession: ClassSession;
+
 }

@@ -1,7 +1,7 @@
 import { User } from "src/users/entities/user.entity";
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
-@Entity()
+@Entity('password_reset_token')
 export class PasswordResetToken {
   @PrimaryGeneratedColumn()
   id: number;
@@ -20,6 +20,9 @@ export class PasswordResetToken {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @OneToOne(() => User, user => user.passwordResetToken)
+  user: User;
 
 }
 

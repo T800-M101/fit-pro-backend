@@ -8,14 +8,15 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class InstructorsService {
 
-  constructor(@InjectRepository(Instructor) private instructorsRepository: Repository<Instructor>){}
+  constructor(@InjectRepository(Instructor) private instructorsRepo: Repository<Instructor>){}
   
   async findAll(): Promise<Instructor[]> {
-    return this.instructorsRepository.find();
+    return this.instructorsRepo.find();
   }
 
-  create(createInstructorDto: CreateInstructorDto) {
-    return 'This action adds a new instructor';
+  async create(createInstructorDto: CreateInstructorDto): Promise<Instructor> {
+    const instructor = this.instructorsRepo.create(createInstructorDto);
+    return await this.instructorsRepo.save(instructor);
   }
 
 
