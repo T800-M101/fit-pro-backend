@@ -26,7 +26,7 @@ constructor(@InjectRepository(User) private usersRepository: Repository<User>){}
 
 
   findOne(id: number) {
-    return `This action returns a #${id} user`;
+    return this.usersRepository.findOne({where: {id}});
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {

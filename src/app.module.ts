@@ -10,36 +10,40 @@ import { MembershipPlansModule } from './membership-plans/membership-plans.modul
 import { AuthModule } from './auth/auth.module';
 import { PasswordResetTokenModule } from './password-reset-token/password-reset-token.module';
 import { EmailService } from './email/email.service';
-import { ClasssSessionModule } from './class_session/class_session.module';
 import { CommentsModule } from './comments/comments.module';
 import { User } from './users/entities/user.entity';
 import { Booking } from './bookings/entities/booking.entity';
 import { PasswordResetToken } from './password-reset-token/entities/password-reset-token.entity';
-import { ClassSession } from './class_session/entities/class_session.entity';
 import { Class } from './classes/entities/class.entity';
 import { Instructor } from './instructors/entities/instructor.entity';
 import { MembershipPlan } from './membership-plans/entities/membership-plan.entity';
 import { Payment } from './payments/entities/payment.entity';
 import { Comment } from './comments/entities/comment.entity';
 import { RolesModule } from './roles/roles.module';
-import { Role } from './roles/entities/role.entity';
+import { Roles } from './roles/entities/role.entity';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ClassSessionsModule } from './cron/class-sessions/class-sessions.module';
+import { ScheduleTemplateModule } from './schedule-template/schedule-template.module';
+import { ScheduleTemplate } from './schedule-template/entities/schedule-template.entity';
+import { ClassSession } from './cron/class-sessions/class-session.entity';
 
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule], // <-- here use ConfigModule, NOT ConfigService
+      imports: [ConfigModule], 
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         host: configService.get('DB_HOST'),
-        port: configService.get<number>('DB_PORT'), // Cast port to number
+        port: configService.get<number>('DB_PORT'), 
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
         schema: 'public',
-        entities: [User, Booking, PasswordResetToken, ClassSession, Class, Comment, Instructor, MembershipPlan, Payment, Role],
+        entities: [User, Booking, PasswordResetToken, ClassSession, Class, Comment, Instructor, MembershipPlan, Payment, Roles, ScheduleTemplate],
         synchronize: true,
       }),
     }),
@@ -51,14 +55,12 @@ import { Role } from './roles/entities/role.entity';
     MembershipPlansModule,
     AuthModule,
     PasswordResetTokenModule,
-    ClasssSessionModule,
+    ClassSessionsModule,
     CommentsModule,
-    RolesModule
+    RolesModule,
+    ClassSessionsModule,
+    ScheduleTemplateModule
   ],
-  providers: [EmailService],
+  providers: [EmailService], 
 })
-export class AppModule {
-  constructor() {}
-
-
-}
+export class AppModule {}

@@ -1,23 +1,17 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from "class-validator";
+import { PartialType } from "@nestjs/mapped-types";
+import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { LoginAuthDto } from "src/auth/dto/login-auth.dto";
 
-export class CreateUserDto {
+export class CreateUserDto extends PartialType(LoginAuthDto) {
   
     
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
-
   @IsString()
   @IsOptional()
   phone: string;
-
-  @IsString()
-  @MinLength(6)
-  password: string;
 
   @IsString()
   @IsNotEmpty()
@@ -25,11 +19,31 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
-  membership: string;
+  membershipId: string;
+
+  @IsBoolean()
+  membershipStatus: boolean = false;
+  
+  @IsOptional()
+  @IsInt()
+  roleId?: number;
+  
+  @IsOptional()
+  @IsBoolean()
+  allowEmail: boolean = true;
+  
+  @IsOptional()
+  @IsBoolean()
+  allowWhatsApp?: boolean = true;
 
   @IsString()
   @IsOptional()
-  qrCode?: string;
+  qrCode: string;
 }
+
+
+      
+      
+      
 
 

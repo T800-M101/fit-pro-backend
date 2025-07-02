@@ -3,8 +3,8 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Booking } from './entities/booking.entity';
-import { ClassSession } from 'src/class_session/entities/class_session.entity';
 import { User } from 'src/users/entities/user.entity';
+import { ClassSession } from 'src/cron/class-sessions/class-session.entity';
 
 @Injectable()
 export class BookingsService {

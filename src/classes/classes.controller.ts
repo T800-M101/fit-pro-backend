@@ -14,7 +14,7 @@ export class ClassesController {
   }
 
 
-  @Post()
+  @Post('create')
   create(@Body() createClassDto: CreateClassDto) {
     return this.classesService.create(createClassDto);
   }

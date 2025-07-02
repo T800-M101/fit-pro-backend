@@ -1,5 +1,6 @@
-import { ClassSession } from "src/class_session/entities/class_session.entity";
+import { ClassSession } from "src/cron/class-sessions/class-session.entity";
 import { Instructor } from "src/instructors/entities/instructor.entity";
+import { ScheduleTemplate } from "src/schedule-template/entities/schedule-template.entity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 
@@ -24,11 +25,18 @@ export class Class {
   @Column({ length: 20, nullable: false })
   intensity?: string;
 
-   @ManyToOne(() => Instructor, instructor => instructor.classes)
+  @Column({name: 'default_spots', type: 'int', default: 0})
+  defaultSpots: number;
+
+  @ManyToOne(() => Instructor, instructor => instructor.classes)
   instructor: Instructor;
+
 
   @OneToMany(() => ClassSession, (session) => session.class)
   sessions: ClassSession[];
+
+  @OneToMany(() => ScheduleTemplate, template => template.class)
+  scheduleTemplates: ScheduleTemplate[];
 }
 
 

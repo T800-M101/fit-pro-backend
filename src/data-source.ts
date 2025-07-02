@@ -7,12 +7,13 @@ import { Payment } from './payments/entities/payment.entity';
 import { Booking } from './bookings/entities/booking.entity';
 
 
-import { ClassSession } from './class_session/entities/class_session.entity';
 import { Comment } from './comments/entities/comment.entity';
 import { PasswordResetToken } from './password-reset-token/entities/password-reset-token.entity';
 import { Instructor } from './instructors/entities/instructor.entity';
 import { MembershipPlan } from './membership-plans/entities/membership-plan.entity';
-import { Role } from './roles/entities/role.entity';
+import { Roles } from './roles/entities/role.entity';
+import { ScheduleTemplate } from './schedule-template/entities/schedule-template.entity';
+import { ClassSession } from './cron/class-sessions/class-session.entity';
 // Add other entities here
 
 export const AppDataSource = new DataSource({
@@ -25,6 +26,6 @@ export const AppDataSource = new DataSource({
   synchronize: true,
   logging: true,
   entities: [
-    User, Booking, ClassSession, Class, Comment, Payment, PasswordResetToken, Class, Instructor, MembershipPlan, Role
+    User, Booking, ClassSession, Class, Comment, Payment, PasswordResetToken, Class, Instructor, MembershipPlan, Roles, ScheduleTemplate
   ], 
 });

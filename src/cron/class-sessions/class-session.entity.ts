@@ -20,6 +20,9 @@ export class ClassSession {
   @Column({name: 'start_time', type:'time', nullable: true})
   startTime: string;
 
+  @Column({ name: 'is_active', type: 'boolean', default: true })
+  isActive: boolean;
+
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
@@ -36,6 +39,5 @@ export class ClassSession {
   @OneToMany(() => Booking, booking => booking.classSession)
   bookings: Booking[];
 }
-
 
 

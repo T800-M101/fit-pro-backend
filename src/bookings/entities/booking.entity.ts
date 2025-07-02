@@ -1,4 +1,4 @@
-import { ClassSession } from 'src/class_session/entities/class_session.entity';
+import { ClassSession } from 'src/cron/class-sessions/class-session.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
@@ -31,7 +31,7 @@ export class Booking {
   bookingTime: Date; 
 
   @CreateDateColumn({ name: 'created_at' })
-    createdAt: Date;
+  createdAt: Date;
 
   @ManyToOne(() => User, user => user.bookings, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })

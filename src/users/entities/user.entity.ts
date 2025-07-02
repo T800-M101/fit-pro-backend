@@ -15,7 +15,7 @@ import {
 } from 'typeorm';
 import { Payment } from 'src/payments/entities/payment.entity';
 import { MembershipPlan } from 'src/membership-plans/entities/membership-plan.entity';
-import { Role } from 'src/roles/entities/role.entity';
+import { Roles } from 'src/roles/entities/role.entity';
 
 
 @Entity('users')
@@ -38,9 +38,6 @@ export class User {
   @Column({ length: 30, nullable: false })
   gender?: string;
 
-  @Column({ name: 'membership', length: 50, nullable: true })
-  membership?: string;
-
   @Column({name: 'membership_status', type: 'boolean', default: false})
   membershipStatus
 
@@ -52,6 +49,9 @@ export class User {
 
   @Column({ name: 'qr_code', type: 'text', nullable: true })
   qrCode?: string;
+
+  @Column({ name: 'role_id', type: 'int', nullable: true, default: 3 })
+  roleId?: number;  
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
@@ -71,13 +71,13 @@ export class User {
   @OneToMany(() => Payment, (payment) => payment.user)
   payments: Payment[];
 
- @ManyToOne(() => MembershipPlan, { nullable: true })
-@JoinColumn({ name: 'membership_plan_id' }) 
-membershipPlan?: MembershipPlan;
+ @ManyToOne(() => MembershipPlan, { nullable: false })
+ @JoinColumn({ name: 'membership_id' }) 
+ membershipPlan?: MembershipPlan;
 
- @ManyToOne(() => Role, { nullable: true }) 
-@JoinColumn({ name: 'role_id' }) 
-role?: Role;
+ @ManyToOne(() => Roles, { nullable: true },) 
+ @JoinColumn({ name: 'role_id' }) 
+ role?: Roles;
 }
 
 
