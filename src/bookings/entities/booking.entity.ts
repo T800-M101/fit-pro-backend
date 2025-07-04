@@ -27,8 +27,11 @@ export class Booking {
   @Column({ name: 'cancellation_time', nullable: true, type: 'timestamp' })
   cancellationTime: Date | null;  
 
-  @Column({name: 'booking_time'})
-  bookingTime: Date; 
+  @Column({name: 'booking_date', type: 'timestamp with time zone'})
+  bookingDate: Date;
+  
+  @Column({name: 'booking_time', type: 'time without time zone'})
+  bookingTime: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

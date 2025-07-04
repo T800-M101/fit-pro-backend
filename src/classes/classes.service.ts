@@ -21,7 +21,6 @@ export class ClassesService {
   }
 
  async create(createClassDto: CreateClassDto): Promise<Class> {
-  console.log(new Date())
     const { instructorId, ...classData } = createClassDto;
 
     // Buscar instructor
