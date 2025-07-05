@@ -8,16 +8,16 @@ export class ClassSession {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'date', nullable: true})
+  @Column({ type: 'date',  nullable: true})
   date: Date;
 
   @Column({ type: 'int', name: 'total_spots', nullable: false, default: 0 })
   totalSpots: number;
   
-  @Column({type: 'int', name: 'available_spots', nullable: true})
-  availableSpots: number;
+  // @Column({type: 'int', name: 'available_spots', nullable: true})
+  // availableSpots: number;
 
-  @Column({name: 'start_time', type:'time', nullable: true})
+  @Column({name: 'start_time', type: 'time without time zone', nullable: true})
   startTime: string;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })

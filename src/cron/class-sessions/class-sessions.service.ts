@@ -5,6 +5,7 @@ import { Class } from 'src/classes/entities/class.entity';
 import { ScheduleTemplate } from 'src/schedule-template/entities/schedule-template.entity';
 import { Repository } from 'typeorm';
 import { ClassSession } from './class-session.entity';
+import { Booking } from 'src/bookings/entities/booking.entity';
 
 @Injectable()
 export class ClassSessionsService {
@@ -17,6 +18,9 @@ export class ClassSessionsService {
     @InjectRepository(ClassSession)
     private readonly classSessionRepo: Repository<ClassSession>,
 
+    @InjectRepository(Booking)
+    private readonly bookingRepository: Repository<Booking>,
+
     @InjectRepository(ClassSession)
     private readonly templateRepo: Repository<ScheduleTemplate>,
   ) {}
@@ -25,7 +29,7 @@ export class ClassSessionsService {
     await this.generateWeeklySessions();
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_WEEK)
   async generateWeeklySessions() {
     this.logger.log('Generating class sessions...');
 
@@ -39,11 +43,14 @@ export class ClassSessionsService {
     });
 
     for (const session of oldSessions) {
-      const sessionDate =
-        session.date instanceof Date ? session.date : new Date(session.date);
-      const sessionDateTime = new Date(
-        `${sessionDate.toISOString().split('T')[0]}T${session.startTime}`,
-      );
+      const sessionDate = new Date(session.date); // `session.date` is a Date or string in 'YYYY-MM-DD'
+
+      // session.startTime is now a string like '06:00'
+      const [hours, minutes] = session.startTime.split(':').map(Number);
+
+      // Combine into a full datetime object
+      const sessionDateTime = new Date(sessionDate);
+      sessionDateTime.setHours(hours, minutes, 0, 0);
 
       if (sessionDateTime < now) {
         session.isActive = false;
@@ -61,7 +68,6 @@ export class ClassSessionsService {
     const sessionsToCreate: ClassSession[] = [];
 
     for (const cls of classes) {
-      // Group templates by weekday (if they exist)
       const templatesByDay =
         cls.scheduleTemplates?.reduce(
           (acc, template) => {
@@ -77,12 +83,14 @@ export class ClassSessionsService {
         const templatesForDay = templatesByDay[day] || [];
         if (templatesForDay.length === 0) continue;
 
-        const date = this.getThisWeekdayDate(day);
+        const date = this.getNextWeekdayDate(day);
 
         for (const template of templatesForDay) {
-          const startTime = template.startTime;
+          const [hours, minutes] = template.startTime.split(':').map(Number);
 
-          // Use template.totalSpots if available, otherwise fall back to cls.defaultSpots or 10
+          // Format startTime as "HH:MM" string
+          const startTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
           const fallbackSpots = template.totalSpots ?? cls.defaultSpots ?? 10;
 
           const exists = await this.classSessionRepo.findOne({
@@ -99,20 +107,20 @@ export class ClassSessionsService {
               date,
               startTime,
               totalSpots: fallbackSpots,
-              availableSpots: fallbackSpots,
               isActive: true,
             });
+
             sessionsToCreate.push(session);
           }
         }
-      }
-    }
 
-    if (sessionsToCreate.length > 0) {
-      await this.classSessionRepo.save(sessionsToCreate);
-      this.logger.log(`${sessionsToCreate.length} new sessions created.`);
-    } else {
-      this.logger.log('No new sessions were created.');
+        if (sessionsToCreate.length > 0) {
+          await this.classSessionRepo.save(sessionsToCreate);
+          this.logger.log(`${sessionsToCreate.length} new sessions created.`);
+        } else {
+          this.logger.log('No new sessions were created.');
+        }
+      }
     }
   }
 
@@ -127,30 +135,17 @@ export class ClassSessionsService {
     return result;
   }
 
-  private getThisWeekdayDate(targetDay: number): Date {
-    const today = new Date();
-    const todayDay = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const diff = targetDay - todayDay;
-
-    const result = new Date(today);
-    result.setDate(
-      today.getDate() + (diff >= 0 ? diff : -(7 - Math.abs(diff))),
-    );
-    result.setHours(0, 0, 0, 0);
-    return result;
-  }
-
   async getSessionsByClassId(classId: number) {
     const sessions = await this.classSessionRepo.find({
       where: {
         class: { id: classId },
         isActive: true,
       },
-      relations: ['bookings'],
       order: { date: 'ASC', startTime: 'ASC' },
     });
 
     const daysOfWeek = [
+      'Sunday',
       'Monday',
       'Tuesday',
       'Wednesday',
@@ -159,72 +154,73 @@ export class ClassSessionsService {
       'Saturday',
     ];
 
-    const result: {
+    type SessionTimeSlot = {
+      time: string;
+      totalSpots: number;
+      availableSpots: number;
+    };
+
+    type DailySession = {
       classId: number;
       day: string;
       date: string;
-      availableSpots: number;
-      totalSpots: number;
-      timeSlots: { time: string }[];
-    }[] = [];
+      sessions: SessionTimeSlot[];
+    };
 
-    const accumulator: Record<
-      string,
-      {
-        timeSlots: Set<string>;
-        date: string;
-        totalSpotsPerSlot: number;
-        totalBookings: number;
-      }
-    > = {};
+    const result: DailySession[] = [];
 
+    // Process each session and group by date
     for (const session of sessions) {
       const dateObj =
         session.date instanceof Date ? session.date : new Date(session.date);
-      const dayIndex = dateObj.getDay(); // 0 = Sunday ... 6 = Saturday
-      if (dayIndex === 0) continue; // Skip Sundays
-
-      const dayName = daysOfWeek[dayIndex - 1];
       const dateStr = dateObj.toISOString().split('T')[0];
-      const time = session.startTime.slice(0, 5); // "HH:MM"
-      const bookingsCount = session.bookings?.length || 0;
+      const dayName = daysOfWeek[dateObj.getDay()];
+      const time = session.startTime.substring(0, 5); // '06:00'
+      const timeFull = `${time}:00`; // '06:00:00'
 
-      if (!accumulator[dayName]) {
-        accumulator[dayName] = {
-          date: dateStr,
-          timeSlots: new Set<string>(),
-          totalSpotsPerSlot: session.totalSpots,
-          totalBookings: 0,
-        };
-      }
-
-      accumulator[dayName].timeSlots.add(time);
-      accumulator[dayName].totalBookings += bookingsCount;
-    }
-
-    for (const day of daysOfWeek) {
-      const data = accumulator[day];
-      if (data && data.timeSlots.size > 0) {
-        const totalSpots = data.totalSpotsPerSlot;
-        const totalTimeSlots = data.timeSlots.size;
-        const totalCapacity = totalSpots * totalTimeSlots;
-        const availableSpots = totalCapacity - data.totalBookings;
-
-        result.push({
+      // Find or create the daily session entry
+      let dailySession = result.find((item) => item.date === dateStr);
+      if (!dailySession) {
+        dailySession = {
           classId,
-          day,
-          date: data.date,
-          totalSpots,
-          availableSpots,
-          timeSlots: Array.from(data.timeSlots)
-            .sort()
-            .map((time) => ({
-              time,
-            })),
-        });
+          day: dayName,
+          date: dateStr,
+          sessions: [],
+        };
+        result.push(dailySession);
       }
+
+      // 🔥 Query for this specific session’s bookings
+      const bookingsCount = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .where(`DATE(booking.bookingDate) = :date`, { date: dateStr })
+        .andWhere(`booking.bookingTime = :time`, { time: timeFull })
+        .getCount();
+
+      // Add the time slot
+      dailySession.sessions.push({
+        time,
+        totalSpots: session.totalSpots,
+        availableSpots: session.totalSpots - bookingsCount,
+      });
     }
+
+    // Sort the result by date
+    result.sort((a, b) => a.date.localeCompare(b.date));
 
     return result;
   }
+
+  // private getThisWeekdayDate(targetDay: number): Date {
+  //     const today = new Date();
+  //     const todayDay = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  //     const diff = targetDay - todayDay;
+
+  //     const result = new Date(today);
+  //     result.setDate(
+  //       today.getDate() + (diff >= 0 ? diff : -(7 - Math.abs(diff))),
+  //     );
+  //     result.setHours(0, 0, 0, 0);
+  //     return result;
+  //   }
 }

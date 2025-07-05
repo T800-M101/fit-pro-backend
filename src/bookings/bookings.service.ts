@@ -17,67 +17,64 @@ export class BookingsService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async saveBookings(
-    bookingsList: CreateBookingDto[],
-    userId: number,
-  ): Promise<void> {
-    const now = new Date();
-    const newBookings: Booking[] = [];
 
-    // 1. Find the user once (outside the loop)
-    const user = await this.userRepository.findOneBy({ id: userId });
-    if (!user) {
-      throw new Error(`User with ID ${userId} not found`);
-    }
+async saveBookings(bookingsList: CreateBookingDto[], userId: number): Promise<void> {
+  const newBookings: Booking[] = [];
 
-    for (const entry of bookingsList) {
-      try {
-        const { classId, date, time } = entry;
+  const user = await this.userRepository.findOneBy({ id: userId });
+  if (!user) {
+    throw new Error(`User with ID ${userId} not found`);
+  }
 
-        // 2. Parse and validate date
-        const parsedDate = new Date(date); // Force UTC
+  for (const entry of bookingsList) {
+    try {
+      const { classId, date: dateString, time: timeString } = entry;
 
-        // 3. Find class session
-        const classSession = await this.classSessionRepository.findOne({
-          where: {
-            class: { id: classId },
-            date: parsedDate,
-            startTime: time,
-          },
-        });
-        if (!classSession) {
-          console.warn(
-            `Session not found (Class: ${classId}, Date: ${parsedDate}, Time: ${time})`,
-          );
-          continue;
-        }
+      // Parse date string to JS Date (midnight)
+      const [year, month, day] = dateString.split('-').map(Number);
+      const bookingDate = new Date(year, month - 1, day);
+      bookingDate.setHours(0, 0, 0, 0); // Ensures no time component
 
-        // 4. Create booking
-        newBookings.push(
-          this.bookingRepository.create({
-            user,
-            classSession,
-            bookingDate: parsedDate,
-            bookingTime: time,
-            attended: false,
-            cancelled: false,
-            cancellationTime: null,
-          }),
+      // timeString is already in "HH:MM" format
+      const classSession = await this.classSessionRepository.findOne({
+        where: {
+          class: { id: classId },
+          date: bookingDate,    
+          startTime: timeString, 
+        },
+      });
+
+      if (!classSession) {
+        console.warn(
+          `Session not found (Class: ${classId}, Date: ${bookingDate.toISOString().split('T')[0]}, Time: ${timeString})`
         );
-      } catch (error) {
-        console.error(`Error processing booking:`, error);
+        continue;
       }
-    }
 
-    // 5. Save ALL bookings in a single transaction
-    if (newBookings.length > 0) {
-      try {
-        await this.bookingRepository.save(newBookings);
-        console.log(`Successfully saved ${newBookings.length} bookings`);
-      } catch (error) {
-        console.error('Failed to save bookings:', error);
-        throw error; // Re-throw to handle upstream
-      }
+      // Create the booking
+      newBookings.push(
+        this.bookingRepository.create({
+          user,
+          classSession,
+          bookingDate,         
+          bookingTime: timeString, 
+          attended: false,
+          cancelled: false,
+          cancellationTime: null,
+        }),
+      );
+    } catch (error) {
+      console.error(`Error processing booking for classId ${entry.classId}:`, error);
     }
   }
+
+  if (newBookings.length > 0) {
+    await this.bookingRepository.save(newBookings);
+    console.log(`Successfully created ${newBookings.length} bookings.`);
+  } else {
+    console.log(' No bookings were created.');
+  }
+}
+
+
 }

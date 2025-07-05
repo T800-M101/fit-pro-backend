@@ -7,15 +7,16 @@ export class ScheduleTemplate {
   id: number;
 
   @Column()
-  dayOfWeek: number; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  dayOfWeek: number; // 0 = Sunday, ..., 6 = Saturday
 
-  @Column('text')
-  startTime: string; // e.g. "06:00"
+  // Just the time part (e.g. "06:00")
+  @Column({ name: 'start_time', type: 'time without time zone' })
+  startTime: string;
 
-  @Column({name:'total_spot', type: 'int', default: 0})
+  @Column({ name: 'total_spots', type: 'int', default: 0 })
   totalSpots: number;
-
 
   @ManyToOne(() => Class, cls => cls.scheduleTemplates, { onDelete: 'CASCADE' })
   class: Class;
 }
+

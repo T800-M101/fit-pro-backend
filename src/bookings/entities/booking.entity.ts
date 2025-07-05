@@ -17,31 +17,32 @@ export class Booking {
 
   @Column({ name: 'user_id', nullable: true })
   userId?: number;
-  
-  @Column({ default: false, nullable: false})
+
+  @Column({ default: false })
   attended: boolean;
 
-  @Column({ default: false, nullable: false})
+  @Column({ default: false })
   cancelled: boolean;
 
-  @Column({ name: 'cancellation_time', nullable: true, type: 'timestamp' })
-  cancellationTime: Date | null;  
+  @Column({ name: 'cancellation_time', type: 'timestamptz', nullable: true })
+  cancellationTime: Date | null;
 
-  @Column({name: 'booking_date', type: 'timestamp with time zone'})
+  // Stores full timestamp of when the booking was made
+  @Column({ name: 'booking_date', type: 'timestamptz' })
   bookingDate: Date;
-  
-  @Column({name: 'booking_time', type: 'time without time zone'})
+
+  // Stores time only, such as "06:00"
+  @Column({ name: 'booking_time', type: 'time without time zone' })
   bookingTime: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
   @ManyToOne(() => User, user => user.bookings, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => ClassSession, classSession => classSession.bookings, { onDelete: 'CASCADE' })
+  @ManyToOne(() => ClassSession, session => session.bookings, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'class_session_id' })
   classSession: ClassSession;
-
 }
