@@ -193,8 +193,10 @@ export class ClassSessionsService {
       // 🔥 Query for this specific session’s bookings
       const bookingsCount = await this.bookingRepository
         .createQueryBuilder('booking')
+        .innerJoin('booking.classSession', 'classSession')
         .where(`DATE(booking.bookingDate) = :date`, { date: dateStr })
         .andWhere(`booking.bookingTime = :time`, { time: timeFull })
+        .andWhere('classSession.class = :classId', { classId })
         .getCount();
 
       // Add the time slot

@@ -27,6 +27,7 @@ export class ScheduleTemplateService {
       class: gymClass,
       dayOfWeek: dto.dayOfWeek,
       startTime: time,
+      totalSpots: dto.totalSpots
     }),
   );
 

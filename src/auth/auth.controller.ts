@@ -1,9 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Put,
-} from '@nestjs/common';
+import { Controller, Post, Body, Put } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
@@ -28,25 +23,25 @@ export class AuthController {
     return this.authService.login(userLogin);
   }
 
+  @Post('request-password-reset')
+  async requestPasswordReset(
+    @Body() resetPasswordDto: RequestPasswordResetDto,
+  ) {
+    return this.authService.sendPasswordResetLink(resetPasswordDto.email);
+  }
 
-  @Post('request-password-reset') 
-  async requestPasswordReset(@Body() resetPasswordDto: RequestPasswordResetDto) {
-  return this.authService.sendPasswordResetLink(resetPasswordDto.email);
-}
+  @Put('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDTO) {
+    return this.authService.resetPassword(resetPasswordDto);
+  }
 
-@Put('reset-password')
-async resetPassword(@Body() resetPasswordDto: ResetPasswordDTO) {
-  return this.authService.resetPassword(resetPasswordDto);
-}
-
-
-// @UseGuards(JwtAuthGuard)
-// @Put('change-password') 
-// async changePassword(
-//   @Req() req: AuthenticatedRequest,
-//   @Body() changePasswordDto: ChangePasswordDTO
-// ) {
-//   const userId = req.user.id; 
-//   return this.authService.changePassword(userId, changePasswordDto);
-// }
+  // @UseGuards(JwtAuthGuard)
+  // @Put('change-password')
+  // async changePassword(
+  //   @Req() req: AuthenticatedRequest,
+  //   @Body() changePasswordDto: ChangePasswordDTO
+  // ) {
+  //   const userId = req.user.id;
+  //   return this.authService.changePassword(userId, changePasswordDto);
+  // }
 }
