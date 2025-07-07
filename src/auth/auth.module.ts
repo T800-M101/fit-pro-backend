@@ -11,10 +11,11 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwtStrategy';
 import { Roles } from 'src/roles/entities/role.entity';
 import { MembershipPlan } from 'src/membership-plans/entities/membership-plan.entity';
+import { Duration } from 'src/duration/entities/duration.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, PasswordResetToken, Roles, MembershipPlan]),
+    TypeOrmModule.forFeature([User, PasswordResetToken, Roles, MembershipPlan, Duration]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: jwtConstants.secret,

@@ -124,105 +124,100 @@ export class ClassSessionsService {
     }
   }
 
-  private getNextWeekdayDate(targetDay: number): Date {
-    const today = new Date();
-    const todayDay = today.getDay(); // 0 (Sun) to 6 (Sat)
-    const daysUntilTarget = (targetDay + 7 - todayDay) % 7 || 7;
+  
+private getNextWeekdayDate(targetDay: number): Date {
+  const today = new Date();
+  const todayDay = today.getDay(); // Sunday=0, Monday=1, ..., Saturday=6
 
-    const result = new Date(today);
-    result.setDate(today.getDate() + daysUntilTarget);
-    result.setHours(0, 0, 0, 0);
-    return result;
+  // Calculate days until next target day (always in the next week)
+  let daysUntilNextTarget = (targetDay - todayDay + 7) % 7;
+  // If it's the same day (Sunday), we want exactly 7 days later
+  if (daysUntilNextTarget === 0) {
+    daysUntilNextTarget = 7;
   }
 
+  const result = new Date(today);
+  result.setDate(today.getDate() + daysUntilNextTarget);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+  
   async getSessionsByClassId(classId: number) {
-    const sessions = await this.classSessionRepo.find({
-      where: {
-        class: { id: classId },
-        isActive: true,
-      },
-      order: { date: 'ASC', startTime: 'ASC' },
-    });
+  const sessions = await this.classSessionRepo.find({
+    where: {
+      class: { id: classId },
+      isActive: true,
+    },
+    order: {
+      date: 'ASC',
+      startTime: 'ASC',
+    },
+  });
 
-    const daysOfWeek = [
-      'Sunday',
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-    ];
+  const daysOfWeek = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ];
 
-    type SessionTimeSlot = {
-      time: string;
-      totalSpots: number;
-      availableSpots: number;
-    };
+  type SessionTimeSlot = {
+    time: string;
+    totalSpots: number;
+    availableSpots: number;
+  };
 
-    type DailySession = {
-      classId: number;
-      day: string;
-      date: string;
-      sessions: SessionTimeSlot[];
-    };
+  type DailySession = {
+    classId: number;
+    day: string;
+    date: string;
+    sessions: SessionTimeSlot[];
+  };
 
-    const result: DailySession[] = [];
+  const resultMap = new Map<string, DailySession>();
 
-    // Process each session and group by date
-    for (const session of sessions) {
-      const dateObj =
-        session.date instanceof Date ? session.date : new Date(session.date);
-      const dateStr = dateObj.toISOString().split('T')[0];
-      const dayName = daysOfWeek[dateObj.getDay()];
-      const time = session.startTime.substring(0, 5); // '06:00'
-      const timeFull = `${time}:00`; // '06:00:00'
+  for (const session of sessions) {
+    const dateObj = new Date(session.date);
+    const dayIndex = dateObj.getDay();
+    console.log('sessio date', session.date, ' =>','dayIdex',dayIndex)
 
-      // Find or create the daily session entry
-      let dailySession = result.find((item) => item.date === dateStr);
-      if (!dailySession) {
-        dailySession = {
-          classId,
-          day: dayName,
-          date: dateStr,
-          sessions: [],
-        };
-        result.push(dailySession);
-      }
+    const dateStr = dateObj.toISOString().split('T')[0];
+    const dayName = daysOfWeek[dayIndex];
+    const time = session.startTime.substring(0, 5);
+    const timeFull = `${time}:00`;
 
-      // 🔥 Query for this specific session’s bookings
-      const bookingsCount = await this.bookingRepository
-        .createQueryBuilder('booking')
-        .innerJoin('booking.classSession', 'classSession')
-        .where(`DATE(booking.bookingDate) = :date`, { date: dateStr })
-        .andWhere(`booking.bookingTime = :time`, { time: timeFull })
-        .andWhere('classSession.class = :classId', { classId })
-        .getCount();
+    const key = dateStr;
 
-      // Add the time slot
-      dailySession.sessions.push({
-        time,
-        totalSpots: session.totalSpots,
-        availableSpots: session.totalSpots - bookingsCount,
+    if (!resultMap.has(key)) {
+      resultMap.set(key, {
+        classId,
+        day: dayName,
+        date: dateStr,
+        sessions: [],
       });
     }
 
-    // Sort the result by date
-    result.sort((a, b) => a.date.localeCompare(b.date));
+    // 🔥 Count bookings for this time slot
+    const bookingsCount = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .innerJoin('booking.classSession', 'classSession')
+      .where(`DATE(booking.bookingDate) = :date`, { date: dateStr })
+      .andWhere(`booking.bookingTime = :time`, { time: timeFull })
+      .andWhere('classSession.class = :classId', { classId })
+      .getCount();
 
-    return result;
+    resultMap.get(key)!.sessions.push({
+      time,
+      totalSpots: session.totalSpots,
+      availableSpots: session.totalSpots - bookingsCount,
+    });
   }
 
-  // private getThisWeekdayDate(targetDay: number): Date {
-  //     const today = new Date();
-  //     const todayDay = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  //     const diff = targetDay - todayDay;
+  // Convert map to sorted array
+  return [...resultMap.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
 
-  //     const result = new Date(today);
-  //     result.setDate(
-  //       today.getDate() + (diff >= 0 ? diff : -(7 - Math.abs(diff))),
-  //     );
-  //     result.setHours(0, 0, 0, 0);
-  //     return result;
-  //   }
 }

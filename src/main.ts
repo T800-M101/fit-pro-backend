@@ -2,6 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 import { AppDataSource } from './data-source';
+import { RawBodyMiddleware } from './payments/stripe/raw-body-middleware.middleware'; 
+
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
 
@@ -24,6 +27,9 @@ async function bootstrap() {
     origin: process.env.FRONTEND_URL,
     credentials: true
   });
+
+  app.use('/webhooks/webhook', new RawBodyMiddleware().use); 
+
 
   
  

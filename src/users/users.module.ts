@@ -9,5 +9,6 @@ import { JwtStrategy } from 'src/auth/jwtStrategy';
   imports: [TypeOrmModule.forFeature([User])],
   controllers: [UsersController],
   providers: [UsersService, JwtStrategy ],
+  exports: [UsersService]
 })
 export class UsersModule {}

@@ -5,10 +5,10 @@ import { ClassSessionsService } from './class-sessions.service';
 export class ClassSessionsController {
   constructor(private readonly classSessionsService: ClassSessionsService) {}
 
-  @Post('generate')
-  async generateNow() {
+@Post('generate')
+  async generateSessionsManually() {
     await this.classSessionsService.generateWeeklySessions();
-    return { message: 'Sesiones generadas exitosamente' };
+    return { message: 'Sessions generated!' };
   }
 
   @Get('class/:id')

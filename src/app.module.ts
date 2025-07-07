@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { InstructorsModule } from './instructors/instructors.module';
@@ -26,6 +26,11 @@ import { ClassSessionsModule } from './cron/class-sessions/class-sessions.module
 import { ScheduleTemplateModule } from './schedule-template/schedule-template.module';
 import { ScheduleTemplate } from './schedule-template/entities/schedule-template.entity';
 import { ClassSession } from './cron/class-sessions/class-session.entity';
+import { DurationModule } from './duration/duration.module';
+import { Duration } from './duration/entities/duration.entity';
+import { StripeModule } from './payments/stripe/stripe.module';
+import { WebhookModule } from './payments/stripe/webhook-module';
+import { RawBodyMiddleware } from './payments/stripe/raw-body-middleware.middleware';
 
 
 @Module({
@@ -43,7 +48,7 @@ import { ClassSession } from './cron/class-sessions/class-session.entity';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
         schema: 'public',
-        entities: [User, Booking, PasswordResetToken, ClassSession, Class, Comment, Instructor, MembershipPlan, Payment, Roles, ScheduleTemplate],
+        entities: [User, Booking, PasswordResetToken, ClassSession, Class, Comment, Instructor, MembershipPlan, Payment, Roles, ScheduleTemplate, Duration],
         synchronize: true,
       }),
     }),
@@ -59,8 +64,17 @@ import { ClassSession } from './cron/class-sessions/class-session.entity';
     CommentsModule,
     RolesModule,
     ClassSessionsModule,
-    ScheduleTemplateModule
+    ScheduleTemplateModule,
+    DurationModule,
+    StripeModule,
+    WebhookModule
   ],
   providers: [EmailService], 
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(RawBodyMiddleware)
+      .forRoutes({ path: 'webhooks/webhook', method: RequestMethod.POST });
+  }
+}

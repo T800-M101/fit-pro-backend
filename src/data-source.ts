@@ -14,6 +14,7 @@ import { MembershipPlan } from './membership-plans/entities/membership-plan.enti
 import { Roles } from './roles/entities/role.entity';
 import { ScheduleTemplate } from './schedule-template/entities/schedule-template.entity';
 import { ClassSession } from './cron/class-sessions/class-session.entity';
+import { Duration } from './duration/entities/duration.entity';
 // Add other entities here
 
 export const AppDataSource = new DataSource({
@@ -26,6 +27,6 @@ export const AppDataSource = new DataSource({
   synchronize: true,
   logging: true,
   entities: [
-    User, Booking, ClassSession, Class, Comment, Payment, PasswordResetToken, Class, Instructor, MembershipPlan, Roles, ScheduleTemplate
+    User, Booking, ClassSession, Class, Comment, Payment, PasswordResetToken, Class, Instructor, MembershipPlan, Roles, ScheduleTemplate, Duration
   ], 
 });

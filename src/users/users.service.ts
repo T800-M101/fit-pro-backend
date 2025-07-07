@@ -46,6 +46,16 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  async activateMembership(userId: number) {
+  const user = await this.usersRepository.findOneBy({ id: userId });
+  if (!user) throw new NotFoundException('User not found');
+
+  user.membershipStatus = true;
+  user.updatedAt = new Date();
+
+  return this.usersRepository.save(user);
+}
+
   remove(id: number) {
     return `This action removes a #${id} user`;
   }
