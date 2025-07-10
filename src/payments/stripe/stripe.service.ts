@@ -12,7 +12,9 @@ export class StripeService {
   }
 
   async createCheckoutSession(price: number, userId: number) {
+   
     const session = await this.stripe.checkout.sessions.create({
+      
       payment_method_types: ['card'],
       mode: 'payment',
       line_items: [
@@ -27,13 +29,14 @@ export class StripeService {
           quantity: 1,
         },
       ],
+      
       metadata: {
         userId: userId.toString(),
       },
-      success_url: `${process.env.FRONTEND_URL}/payments/success`,
-      cancel_url: `${process.env.FRONTEND_URL}/payments/cancel`,
+      success_url: `${process.env.FRONTEND_URL}`,
+      cancel_url: `${process.env.FRONTEND_URL}`,
     });
-
+  
     return { id: session.id, url: session.url };
   }
 }

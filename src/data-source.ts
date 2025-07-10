@@ -19,14 +19,22 @@ import { Duration } from './duration/entities/duration.entity';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  host: 'localhost',
+  host: 'dpg-d1lupqndiees7386lh8g-a.oregon-postgres.render.com',
   port: 5432,
-  username: 'admin',
-  password: 'secret123',
-  database: 'fitproDB',
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   synchronize: true,
   logging: true,
   entities: [
     User, Booking, ClassSession, Class, Comment, Payment, PasswordResetToken, Class, Instructor, MembershipPlan, Roles, ScheduleTemplate, Duration
   ], 
+  ssl: true, // Add this for Render DB
+  extra: {
+    ssl: {
+      rejectUnauthorized: false // Required for Render
+    }
+  }
 });
+
+

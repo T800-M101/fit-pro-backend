@@ -15,7 +15,7 @@ import { Duration } from 'src/duration/entities/duration.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, PasswordResetToken, Roles, MembershipPlan, Duration]),
+    TypeOrmModule.forFeature([User, PasswordResetToken, Roles, MembershipPlan]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: jwtConstants.secret,

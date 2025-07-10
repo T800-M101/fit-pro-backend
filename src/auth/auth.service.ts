@@ -21,7 +21,6 @@ import { ResetPasswordDTO } from './dto/reset-password.dto';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { Roles } from '../roles/entities/role.entity';
 import { MembershipPlan } from 'src/membership-plans/entities/membership-plan.entity';
-import { Duration } from 'src/duration/entities/duration.entity';
 
 @Injectable()
 export class AuthService {
@@ -32,8 +31,6 @@ export class AuthService {
     @InjectRepository(Roles) private rolRepository: Repository<Roles>,
     @InjectRepository(MembershipPlan)
     private membershipPlanRepository: Repository<MembershipPlan>,
-    @InjectRepository(Duration)
-    private durationRepository: Repository<Duration>,
     private readonly emailService: EmailService,
     private jwtService: JwtService,
   ) {}
@@ -69,11 +66,8 @@ export class AuthService {
         );
       }
 
-      // Hash password
       const hashedPassword = await hash(password, 10);
 
-      
-      // Create new user
       const newUser = this.usersRepository.create({
         ...userData,
         name: userData.name.toLowerCase(),
@@ -83,28 +77,35 @@ export class AuthService {
         role: defaultRole,
         membershipPlan,
       });
-      
+
       const savedUser = await this.usersRepository.save(newUser);
-     
+
       const fullUser = await this.usersRepository.findOne({
         where: { id: savedUser.id },
         relations: ['membershipPlan'],
       });
 
       if (!fullUser?.membershipPlan) {
-        throw new HttpException('Membership data missing', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new HttpException(
+          'Membership data missing',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
 
       const payload = {
         sub: savedUser.id,
         name: savedUser.name,
         role: savedUser.role?.name,
+        membershipStatus: savedUser.membershipStatus,
       };
 
       const token = await this.jwtService.signAsync(payload);
-     
-      return { token, membershipName: fullUser.membershipPlan.name, membershipPrice: fullUser.membershipPlan.price };
 
+      return {
+        token,
+        membershipName: fullUser.membershipPlan.name,
+        membershipPrice: fullUser.membershipPlan.price,
+      };
     } catch (error) {
       console.error('Registration error:', error);
 
@@ -203,5 +204,24 @@ export class AuthService {
     await this.passwordResetRepository.save(record);
 
     return { message: 'Password reset successfully' };
+  }
+
+  async refreshToken(userId: number) {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['role', 'membershipPlan'],
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    const payload = {
+      sub: user.id,
+      name: user.name,
+      role: user.role?.name,
+      membershipStatus: user.membershipStatus,
+    };
+
+    const token = await this.jwtService.signAsync(payload);
+    return { token };
   }
 }

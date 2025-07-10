@@ -49,7 +49,11 @@ import { RawBodyMiddleware } from './payments/stripe/raw-body-middleware.middlew
         database: configService.get('DB_NAME'),
         schema: 'public',
         entities: [User, Booking, PasswordResetToken, ClassSession, Class, Comment, Instructor, MembershipPlan, Payment, Roles, ScheduleTemplate, Duration],
-        synchronize: true,
+        synchronize: false,
+        ssl: true, 
+        extra: {
+        rejectUnauthorized: false, // necesario para Render DB que usa SSL
+      },
       }),
     }),
     InstructorsModule,
