@@ -11,7 +11,7 @@ export class StripeService {
     });
   }
 
-  async createCheckoutSession(price: number, userId: number) {
+  async createCheckoutSession(price: number, userId: number, duration: number) {
    
     const session = await this.stripe.checkout.sessions.create({
       
@@ -32,6 +32,7 @@ export class StripeService {
       
       metadata: {
         userId: userId.toString(),
+        duration
       },
       success_url: `${process.env.FRONTEND_URL}`,
       cancel_url: `${process.env.FRONTEND_URL}`,

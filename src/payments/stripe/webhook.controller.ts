@@ -1,15 +1,17 @@
-import { BadRequestException, Controller, Post, Req, Res } from '@nestjs/common';
+import { BadRequestException, Controller, Logger, Post, Req, Res } from '@nestjs/common';
 import { Request } from 'express';
 import { UsersService } from 'src/users/users.service';
 import Stripe from 'stripe';
+import { PaymentsService } from '../payments.service';
 
 @Controller('webhooks')
 export class WebhookController {
+  private readonly logger = new Logger(WebhookController.name);
   private stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-06-30.basil',
   });
   
-  constructor(private usersService: UsersService){}
+  constructor(private usersService: UsersService, private paymentsService: PaymentsService ){}
   
  @Post('webhook')
   async handleWebhook(@Req() req: Request) {
@@ -36,6 +38,7 @@ export class WebhookController {
         }
 
         await this.usersService.activateMembership(userId);
+        await this.paymentsService.recordInitialPayment(session, userId);
       }
 
       return { received: true };
@@ -44,4 +47,5 @@ export class WebhookController {
     }
   }
 }
+
 

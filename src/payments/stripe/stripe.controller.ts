@@ -6,8 +6,8 @@ export class StripeController {
   constructor(private readonly stripeService: StripeService) {}
 
   @Post('create-checkout-session')
-  async createSession(@Body() body: { price: number; userId: number }) {
-    return this.stripeService.createCheckoutSession(body.price, body.userId);
+  async createSession(@Body() body: { price: number; userId: number, duration: number }) {
+    return this.stripeService.createCheckoutSession(body.price, body.userId, body.duration);
   }
 
 }

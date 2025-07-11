@@ -31,29 +31,43 @@ import { Duration } from './duration/entities/duration.entity';
 import { StripeModule } from './payments/stripe/stripe.module';
 import { WebhookModule } from './payments/stripe/webhook-module';
 import { RawBodyMiddleware } from './payments/stripe/raw-body-middleware.middleware';
-
+import { PaymentReminderModule } from './payments/payment-reminder/payment-reminder.module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule], 
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         host: configService.get('DB_HOST'),
-        port: configService.get<number>('DB_PORT'), 
+        port: configService.get<number>('DB_PORT'),
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
         schema: 'public',
-        entities: [User, Booking, PasswordResetToken, ClassSession, Class, Comment, Instructor, MembershipPlan, Payment, Roles, ScheduleTemplate, Duration],
+        entities: [
+          User,
+          Booking,
+          PasswordResetToken,
+          ClassSession,
+          Class,
+          Comment,
+          Instructor,
+          MembershipPlan,
+          Payment,
+          Roles,
+          ScheduleTemplate,
+          Duration,
+          Payment,
+        ],
         synchronize: false,
-        ssl: true, 
+        ssl: true,
         extra: {
-        rejectUnauthorized: false, // necesario para Render DB que usa SSL
-      },
+          rejectUnauthorized: false, // necesario para Render DB que usa SSL
+        },
       }),
     }),
     InstructorsModule,
@@ -71,9 +85,10 @@ import { RawBodyMiddleware } from './payments/stripe/raw-body-middleware.middlew
     ScheduleTemplateModule,
     DurationModule,
     StripeModule,
-    WebhookModule
+    WebhookModule,
+    PaymentReminderModule,
   ],
-  providers: [EmailService], 
+  providers: [EmailService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
